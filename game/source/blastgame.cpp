@@ -1,44 +1,45 @@
 #include "blastgame.hpp"
 #include "blastshaders.hpp"
 #include <algorithm>
-
-u_int8_t tex_beamData8[] = {
-	0xFF, 0xFF, 0xFF, 0x88,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0x88
-};
+#include <featherkit/render2dtext.hpp>
 
 u_int8_t tex_beamData4[] = {
 	0xFF, 0xFF, 0xFF, 0xFF,
 };
 
-u_int8_t tex_circle[] = {
-	0x00, 0x00, 0x00, 0x00,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0x00, 0x00, 0x00, 0x00,
+#define HALFPI (3.1415f/2.f)
+#define QUTRPI (3.1415f/4.f)
 
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0x00, 0x00, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
+std::vector<BackgroundBeam> bgBeams = {
+	{{-5000.f,  -5000.f}, 0.f, 0.95f},
+	{{-1000.f,  -5000.f}, 0.f, 0.95f},
+	{{-250.f,  -5000.f}, 0.f, 0.95f},
+	{{0.f,    -5000.f}, 0.f, 0.95f},
+	{{250.f,  -5000.f}, 0.f, 0.95f},
+	{{500.f,  -5000.f}, 0.f, 0.95f},
+	{{1000.f,  -5000.f}, 0.f, 0.95f},
+	{{5000.f,  -5000.f}, 0.f, 0.95f},
 
-	0x55, 0x55, 0x55, 0xFF,
-	0x55, 0x55, 0x55, 0xFF,
-	0x55, 0x00, 0x00, 0xFF,
-	0x55, 0x55, 0x55, 0xFF,
+	{{-5000.f,-500.f}, HALFPI, 0.95f},
+	{{-5000.f, 0.f},   HALFPI, 0.95f},
+	{{-5000.f, 500.f}, HALFPI, 0.95f},
 
-	0x00, 0x00, 0x00, 0x00,
-	0x55, 0x55, 0x55, 0xFF,
-	0x55, 0x55, 0x55, 0xFF,
-	0x00, 0x00, 0x00, 0x00,
+	{{-5000.f, 500.f}, HALFPI, 0.85f},
+	{{-5000.f,-500.f}, HALFPI, 0.85f},
+	{{-5000.f, 600.f}, HALFPI, 0.80f},
+
+	{{-5000.f, 570.f}, HALFPI, 0.45f},
+	{{-5000.f,-870.f},    0.f, 0.40f},
+
+	{{-5000.f,-5000.f}, QUTRPI, 0.65f},
+	{{-4500.f,-5000.f}, QUTRPI, 0.65f},
+	{{-4000.f,-5000.f}, QUTRPI, 0.65f},
+	{{-3500.f,-5000.f}, QUTRPI, 0.65f},
+	{{-3000.f,-5000.f}, QUTRPI, 0.65f},
+	{{-2500.f,-5000.f}, QUTRPI, 0.65f},
+	{{-2000.f,-5000.f}, QUTRPI, 0.65f},
+	{{-1500.f,-5000.f}, QUTRPI, 0.65f},
+	{{-1000.f,-5000.f}, QUTRPI, 0.65f},
 };
 
 #define GAUSS_BLUR_DIAM (13)
@@ -46,6 +47,7 @@ u_int8_t tex_circle[] = {
 BlastGame::BlastGame() : window(new fea::SDL2WindowBackend()),
 	input(new fea::SDL2InputBackend()),
 	renderer(fea::Viewport({800.0f, 600.0f}, {0, 0}, fea::Camera({800.0f / 2.0f, 600.0f / 2.0f}))),
+	uifont("/usr/share/fonts/truetype/ttf-dejavu/DejaVuSerif.ttf"), /* TODO == TOP KEK */
 	quad({10.f, 600.f}), projectile({1.f, 4.f})
 {
 }
@@ -55,7 +57,6 @@ void BlastGame::setup(const std::vector<std::string> &args)
 	window.create(fea::VideoMode(800,600, 32), "Blaster");
 	renderer.setup();
 	beam.create(1, 1, tex_beamData4);
-	circle.create(4, 4, tex_circle);
 
 	quad.setTexture(beam);
 
@@ -109,7 +110,7 @@ void BlastGame::setup(const std::vector<std::string> &args)
 	sf->setFireCallback([&](const glm::vec2& p, const glm::vec2& v) {
 				projectiles.push_back(ProjectileInfo{
 										  p,
-										  v, fea::Color(0, 0, 255),
+										  v, fea::Color(255, 255, 0),
 										  sf
 									  });
 	});
@@ -187,9 +188,7 @@ void BlastGame::loop()
 
 	renderer.clear(screenTarget, fea::Color(0.f, 0.f, 0.f));
 
-	drawBeamY(150.f);
-	drawBeamY(350.f);
-	drawBeamX(125.f);
+	for(auto& b : bgBeams) drawBeam(b);
 
 	for(auto it = ships.begin();
 		it != ships.end(); ++it)
@@ -224,7 +223,23 @@ void BlastGame::loop()
 	renderer.clear(screenTarget);
 	renderer.render(screenTarget);
 
+	// Reset the camera for viewport stuff.
 	renderer.getViewport().getCamera().setPosition(glm::vec2{window.getSize().x, window.getSize().y}/2.f);
+
+	float healthWidth = window.getSize().x - 40;
+	fea::Quad healthQuad{{(sf->getHP()/100.f) * healthWidth, 10.f}};
+	healthQuad.setPosition({20.f, window.getSize().y-30.f});
+	healthQuad.setColor({255, 0, 0});
+	renderer.queue(healthQuad);
+
+	fea::TextSurface text;
+	text.setPenPosition({20.f, window.getSize().y-30.f});
+	text.setPenColor({255, 255, 255});
+	text.setPenFont(uifont);
+	text.write("The Swordfish");
+	renderer.queue(text);
+
+	renderer.render(screenTarget);
 
 	framebufferQuad.setTexture(screenTarget.getTexture());
 	framebufferQuad.setSize({window.getSize().x, window.getSize().y});
@@ -273,19 +288,12 @@ void BlastGame::destroy()
 	}
 }
 
-void BlastGame::drawBeamY(const float X)
+void BlastGame::drawBeam(const BackgroundBeam &beam)
 {
-	quad.setRotation(0.f);
-	quad.setPosition({X, 0.f});
-	quad.setSize({2.f, window.getSize().y});
-	renderer.queue(quad);
-}
-
-void BlastGame::drawBeamX(const float Y)
-{
-	quad.setRotation((3.1415f/2.f));
-	quad.setPosition({0.f, Y});
-	quad.setSize({2.f, window.getSize().x});
+	quad.setRotation(beam.angle);
+	quad.setPosition(beam.offset);
+	quad.setSize({2.f, 10000.f});
+	quad.setParallax({beam.parallax});
 	renderer.queue(quad);
 }
 

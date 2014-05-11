@@ -9,6 +9,7 @@
 #include <featherkit/ui/sdl2inputbackend.hpp>
 
 #include <featherkit/render2d.hpp>
+#include <featherkit/render2dtext.hpp>
 
 #include "badguy.hpp"
 #include "swordfish.hpp"
@@ -27,6 +28,12 @@ struct ProjectileInfo
 				   Ship* owner)
 		: position(start), velocity(velocity), color(c), owner(owner),
 		  distanceToDeath(10000.f) {}
+};
+
+struct BackgroundBeam {
+	glm::vec2 offset;
+	float angle;
+	float parallax;
 };
 
 class BlastGame : public fea::Application
@@ -49,10 +56,11 @@ private:
 	fea::Shader brightnessShader;
 	fea::Quad framebufferQuad;
 
+	fea::Font uifont;
+
 	fea::Quad quad;
 	fea::Quad projectile;
 	fea::Texture beam;
-	fea::Texture circle;
 
 	Swordfish* sf;
 
@@ -60,8 +68,7 @@ private:
 
 	std::vector<ProjectileInfo> projectiles;
 
-	void drawBeamY(const float X);
-	void drawBeamX(const float Y);
+	void drawBeam(const BackgroundBeam& beam);
 
 	void drawProjectile(const ProjectileInfo& pi);
 };
