@@ -233,7 +233,7 @@ void BlastGame::loop()
 	renderer.queue(healthQuad);
 
 	fea::TextSurface text;
-	text.setPenPosition({20.f, window.getSize().y-30.f});
+	text.setPenPosition({20.f, window.getSize().y-35.f});
 	text.setPenColor({255, 255, 255});
 	text.setPenFont(uifont);
 	text.write("The Swordfish");
