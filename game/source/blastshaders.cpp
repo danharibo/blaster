@@ -84,7 +84,7 @@ uniform vec3 color;
 uniform float opacity;
 uniform vec2 textureScroll; //hmmmm
 uniform vec2 blurDir;
-uniform float gaussianValues[9];
+uniform float gaussianValues[11];
 
 varying vec2 vTex;
 varying vec4 vColor;
@@ -111,19 +111,21 @@ vec4 sampleGaussian(vec2 tc)
 {
 	ivec2 resolution = textureSize(texture,0);
 	vec2 bVal = vec2(blurDir.x/resolution.x,
-					 blurDir.y/resolution.y) * 3.0;
+					 blurDir.y/resolution.y) * 2.0;
 
 	vec4 sum = vec4(0.0);
 
-	sum += texture2D(texture, tc - (4.0 * bVal)) * gaussianValues[0];
-	sum += texture2D(texture, tc - (3.0 * bVal)) * gaussianValues[1];
-	sum += texture2D(texture, tc - (2.0 * bVal)) * gaussianValues[2];
-	sum += texture2D(texture, tc - (1.0 * bVal)) * gaussianValues[3];
-	sum += texture2D(texture, tc) * gaussianValues[4];
-	sum += texture2D(texture, tc + (1.0 * bVal)) * gaussianValues[5];
-	sum += texture2D(texture, tc + (2.0 * bVal)) * gaussianValues[6];
-	sum += texture2D(texture, tc + (3.0 * bVal)) * gaussianValues[7];
-	sum += texture2D(texture, tc + (4.0 * bVal)) * gaussianValues[8];
+	sum += texture2D(texture, tc - (5.0 * bVal)) * gaussianValues[0];
+	sum += texture2D(texture, tc - (4.0 * bVal)) * gaussianValues[1];
+	sum += texture2D(texture, tc - (3.0 * bVal)) * gaussianValues[2];
+	sum += texture2D(texture, tc - (2.0 * bVal)) * gaussianValues[3];
+	sum += texture2D(texture, tc - (1.0 * bVal)) * gaussianValues[4];
+	sum += texture2D(texture, tc) * gaussianValues[5];
+	sum += texture2D(texture, tc + (1.0 * bVal)) * gaussianValues[6];
+	sum += texture2D(texture, tc + (2.0 * bVal)) * gaussianValues[7];
+	sum += texture2D(texture, tc + (3.0 * bVal)) * gaussianValues[8];
+	sum += texture2D(texture, tc + (4.0 * bVal)) * gaussianValues[9];
+	sum += texture2D(texture, tc + (5.0 * bVal)) * gaussianValues[10];
 
 	return sum;
 }

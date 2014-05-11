@@ -42,6 +42,7 @@ private:
 
 	fea::Renderer2D renderer;
 
+	std::vector<float> gaussian_values;
 	fea::Shader framebufferShader;
 	fea::Shader brightnessShader;
 	fea::Quad framebufferQuad;

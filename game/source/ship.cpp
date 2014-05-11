@@ -2,6 +2,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 Ship::Ship()
+	: _angularVelocity(0.f)
 {
 }
 
@@ -15,7 +16,6 @@ void Ship::setRotation(float angle)
 	polygon.setRotation(angle);
 }
 
-#include <iostream>
 glm::vec2 Ship::getForwardVector() const
 {
 	glm::quat q(glm::vec3{0.f, 0.f, -polygon.getRotation()});

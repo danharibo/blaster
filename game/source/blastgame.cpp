@@ -1,5 +1,6 @@
 #include "blastgame.hpp"
 #include "blastshaders.hpp"
+#include <algorithm>
 
 u_int8_t tex_beamData8[] = {
 	0xFF, 0xFF, 0xFF, 0x88,
@@ -40,27 +41,7 @@ u_int8_t tex_circle[] = {
 	0x00, 0x00, 0x00, 0x00,
 };
 
-float gaussian_matrix[] = {
-	1.f,
-	6.f,
-	15.f,
-	20.f,
-	15.f,
-	6.f,
-	1.f
-};
-
-float gaussian_matrix_norm[] = {
-	0.00390625,
-	0.03125,
-	0.109375,
-	0.21875,
-	0.2734375,
-	0.21875,
-	0.109375,
-	0.03125,
-	0.00390625
-};
+#define GAUSS_BLUR_DIAM (11)
 
 BlastGame::BlastGame() : window(new fea::SDL2WindowBackend()),
 	input(new fea::SDL2InputBackend()),
@@ -78,12 +59,28 @@ void BlastGame::setup(const std::vector<std::string> &args)
 
 	quad.setTexture(beam);
 
+	// Calculate guassian blur values
+	std::vector<float> previousRow = {1,1};
+	for(int i = 2; i < GAUSS_BLUR_DIAM; ++i) {
+		std::vector<float> pascallRow = {1};
+		for(int j = 1; j < previousRow.size(); ++j) {
+			pascallRow.push_back({previousRow[j-1] + previousRow[j]});
+		}
+		pascallRow.push_back({1});
+		previousRow = pascallRow;
+	}
+
+	float sum = std::accumulate(previousRow.begin(), previousRow.end(), 0.f);
+	std::transform(previousRow.begin(), previousRow.end(), previousRow.begin(),
+				   [=](float a){ return a / sum; });
+	gaussian_values = previousRow;
+
 	framebufferShader.setSource(
 				Shaders::Framebuffer::VertexSource,
 				Shaders::Framebuffer::FragmentSource);
 	framebufferShader.compile();
 	framebufferShader.activate();
-	framebufferShader.setUniform("gaussianValues", fea::FLOAT, 9, gaussian_matrix_norm);
+	framebufferShader.setUniform("gaussianValues", fea::FLOAT, gaussian_values.size(), gaussian_values.data());
 
 	brightnessShader.setSource(
 				Shaders::Framebuffer::VertexSource,
