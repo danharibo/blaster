@@ -94,9 +94,21 @@ void BlastGame::setup(const std::vector<std::string> &args)
 	bg.setRotation((3.1415f*1.5f));
 	bg.setVelocity({-36.f, 0.f});
 
+	ships.push_back(&bg);
+
 	sf.setPosition({200.f, 400.f});
 	sf.setRotation((3.1415f*0.5f));
 	sf.setVelocity({2.f, 0.f});
+
+	ships.push_back(&sf);
+
+	sf.setFireCallback([&](const glm::vec2& p, const glm::vec2& v) {
+				projectiles.push_back(ProjectileInfo{
+										  p,
+										  v, fea::Color(0, 0, 255),
+										  &sf
+									  });
+	});
 
 	projectile.setTexture(beam);
 }
@@ -135,10 +147,7 @@ void BlastGame::loop()
 							   sf.getRightVector() * 0.5f);
 			}
 			if(eve.key.code == fea::Keyboard::SPACE) {
-				projectiles.push_back({
-										  sf.getPosition() + sf.getForwardVector() * 1.5f,
-										  sf.getForwardVector() * 100.f, fea::Color(0, 0, 255)
-									  });
+				sf.fire();
 			}
 		}
 	}
@@ -172,6 +181,14 @@ void BlastGame::loop()
 		auto dp = it->velocity * dt;
 		it->position += dp;
 		it->distanceToDeath -= glm::length(dp);
+
+		// Find any objects currently being intersected
+		auto ship = std::find_if(ships.begin(), ships.end(),
+							   [&](Ship* s) { return s != it->owner && glm::length(it->position - s->getPosition()) < s->getBoundingRadius(); });
+		if( ship != ships.end() ) {
+			it = projectiles.erase(it);
+			continue;
+		}
 
 		drawProjectile(*it);
 		it++;

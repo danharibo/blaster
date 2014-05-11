@@ -6,6 +6,8 @@ class BadGuy : public Ship
 {
 public:
 	BadGuy();
+
+	void fire();
 };
 
 #endif // BADGUY_HPP

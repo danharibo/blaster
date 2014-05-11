@@ -1,8 +1,19 @@
 #include "ship.hpp"
 #include <glm/gtx/quaternion.hpp>
 
+void Ship::calculateBoundingRadius()
+{
+	auto& vs = polygon.getVertices();
+	float accum;
+	for(size_t i = 0; i < vs.size() / 3; i+=3) {
+		accum += glm::length(glm::vec3{vs[i+0], vs[i+1], vs[i+2]});
+	}
+	_boundingRadius = (accum / (vs.size()/3)) * 10.f;
+}
+
 Ship::Ship()
-	: _angularVelocity(0.f)
+	: _angularVelocity(0.f),
+	  _boundingRadius(0.f)
 {
 }
 

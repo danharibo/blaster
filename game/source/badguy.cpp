@@ -50,4 +50,10 @@ BadGuy::BadGuy()
 	for(size_t i = 0; i < bg_verts.size()*2; i++)
 		tc.push_back(0.f);
 	polygon.setTexCoords(tc);
+	calculateBoundingRadius();
+}
+
+void BadGuy::fire()
+{
+
 }

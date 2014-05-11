@@ -18,12 +18,14 @@ struct ProjectileInfo
 	glm::vec2 position;
 	glm::vec2 velocity;
 	fea::Color color;
+	Ship* owner;
 	float distanceToDeath;
 
 	ProjectileInfo(const glm::vec2& start,
 				   const glm::vec2& velocity,
-				   const fea::Color& c)
-		: position(start), velocity(velocity), color(c),
+				   const fea::Color& c,
+				   Ship* owner)
+		: position(start), velocity(velocity), color(c), owner(owner),
 		  distanceToDeath(10000.f) {}
 };
 
@@ -54,6 +56,8 @@ private:
 
 	BadGuy bg;
 	Swordfish sf;
+
+	std::vector<Ship*> ships;
 
 	std::vector<ProjectileInfo> projectiles;
 

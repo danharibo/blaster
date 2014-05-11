@@ -1,4 +1,5 @@
 #include "swordfish.hpp"
+#include <glm/gtc/quaternion.hpp>
 
 std::vector<float> sf_verts = {
 	0.0f, 3.0f,
@@ -84,6 +85,7 @@ std::vector<float> sf_verts = {
 	};
 
 Swordfish::Swordfish()
+	: _fireSwitch(true)
 {
 	polygon.setColor(fea::Color(0, 255, 255));
 	polygon.setScale({10.f, 10.f});
@@ -99,4 +101,17 @@ Swordfish::Swordfish()
 	for(size_t i = 0; i < sf_verts.size()*2; i++)
 		tc.push_back(0.f);
 	polygon.setTexCoords(tc);
+
+	calculateBoundingRadius();
+}
+
+void Swordfish::fire()
+{
+	glm::quat q({0.f, 0.f, -getRotation()});
+	auto tmp = q * glm::vec3{16.f * (_fireSwitch ? 1.f : -1.f), 5.0f, 0.f};
+	_fireSwitch = !_fireSwitch;
+	_fireCallback(
+				getPosition() + glm::vec2{tmp.x, tmp.y},
+				getForwardVector() * 100.f
+				);
 }
