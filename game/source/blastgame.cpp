@@ -41,7 +41,7 @@ u_int8_t tex_circle[] = {
 	0x00, 0x00, 0x00, 0x00,
 };
 
-#define GAUSS_BLUR_DIAM (11)
+#define GAUSS_BLUR_DIAM (13)
 
 BlastGame::BlastGame() : window(new fea::SDL2WindowBackend()),
 	input(new fea::SDL2InputBackend()),
