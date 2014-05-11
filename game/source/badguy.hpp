@@ -1,18 +1,11 @@
 #ifndef BADGUY_HPP
 #define BADGUY_HPP
+#include "ship.hpp"
 
-#include "feapolygon.hpp"
-
-class BadGuy
+class BadGuy : public Ship
 {
-	feaPolygon polygon;
 public:
 	BadGuy();
-
-	void setPosition(const glm::vec2& p);
-	void setRotation(float angle);
-
-	void draw(fea::Renderer2D& renderer);
 };
 
 #endif // BADGUY_HPP

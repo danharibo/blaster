@@ -1,4 +1,3 @@
-#include "badguy.hpp"
 #include "blastgame.hpp"
 #include "blastshaders.hpp"
 
@@ -66,7 +65,7 @@ float gaussian_matrix_norm[] = {
 BlastGame::BlastGame() : window(new fea::SDL2WindowBackend()),
 	input(new fea::SDL2InputBackend()),
 	renderer(fea::Viewport({800.0f, 600.0f}, {0, 0}, fea::Camera({800.0f / 2.0f, 600.0f / 2.0f}))),
-	quad({10.f, 600.f})
+	quad({10.f, 600.f}), projectile({1.f, 4.f})
 {
 }
 
@@ -93,6 +92,16 @@ void BlastGame::setup(const std::vector<std::string> &args)
 
 	framebufferQuad.setPosition({0.f, 0.f});
 	framebufferQuad.setVFlip(true);
+
+	bg.setPosition({600.f, 400.f});
+	bg.setRotation((3.1415f*1.5f));
+	bg.setVelocity({-36.f, 0.f});
+
+	sf.setPosition({200.f, 400.f});
+	sf.setRotation((3.1415f*0.5f));
+	sf.setVelocity({2.f, 0.f});
+
+	projectile.setTexture(beam);
 }
 
 glm::vec2 dir(1.f, 0.f);
@@ -105,6 +114,36 @@ void BlastGame::loop()
 		if (eve.type == fea::Event::CLOSED) {
 			quit();
 		}
+		if(eve.type == fea::Event::KEYPRESSED) {
+			if(eve.key.code == fea::Keyboard::Q) {
+				sf.setAngularVeocity(sf.getAngularVelocity() + 0.05f);
+			}
+			if(eve.key.code == fea::Keyboard::E) {
+				sf.setAngularVeocity(sf.getAngularVelocity() - 0.05f);
+			}
+			if(eve.key.code == fea::Keyboard::W) {
+				sf.setVelocity(sf.getVelocity() +
+							   sf.getForwardVector() * 1.0f);
+			}
+			if(eve.key.code == fea::Keyboard::S) {
+				sf.setVelocity(sf.getVelocity() -
+							   sf.getForwardVector() * 1.0f);
+			}
+			if(eve.key.code == fea::Keyboard::D) {
+				sf.setVelocity(sf.getVelocity() +
+							   sf.getRightVector() * 0.5f);
+			}
+			if(eve.key.code == fea::Keyboard::A) {
+				sf.setVelocity(sf.getVelocity() -
+							   sf.getRightVector() * 0.5f);
+			}
+			if(eve.key.code == fea::Keyboard::SPACE) {
+				projectiles.push_back({
+										  sf.getPosition() + sf.getForwardVector() * 1.5f,
+										  sf.getForwardVector() * 100.f, fea::Color(0, 0, 255)
+									  });
+			}
+		}
 	}
 
 	fea::RenderTarget screenTarget;
@@ -114,14 +153,32 @@ void BlastGame::loop()
 
 	//renderer.setBlendMode(fea::ALPHA);
 
+	float dt = 0.016f;
+
 	drawBeamY(150.f);
 	drawBeamY(350.f);
 	drawBeamX(125.f);
 
-	BadGuy bg;
-	bg.setPosition({600.f, 400.f});
-	bg.setRotation((3.1415f*1.5f));
+	bg.tick(dt);
 	bg.draw(renderer);
+
+	sf.tick(dt);
+	sf.draw(renderer);
+
+	for(auto it = projectiles.begin();
+		it != projectiles.end();)
+	{
+		if( it->distanceToDeath <= 0.f ) {
+			it = projectiles.erase(it);
+			continue;
+		}
+		auto dp = it->velocity * dt;
+		it->position += dp;
+		it->distanceToDeath -= glm::length(dp);
+
+		drawProjectile(*it);
+		it++;
+	}
 
 	renderer.clear(screenTarget);
 	renderer.render(screenTarget);
@@ -182,4 +239,12 @@ void BlastGame::drawBeamX(const float Y)
 	quad.setPosition({0.f, Y});
 	quad.setSize({2.f, window.getSize().x});
 	renderer.queue(quad);
+}
+
+void BlastGame::drawProjectile(const ProjectileInfo &pi)
+{
+	projectile.setPosition(pi.position);
+	projectile.setColor(pi.color);
+	projectile.setRotation(atan2(pi.velocity.x, pi.velocity.y));
+	renderer.queue(projectile);
 }

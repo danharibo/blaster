@@ -111,7 +111,7 @@ vec4 sampleGaussian(vec2 tc)
 {
 	ivec2 resolution = textureSize(texture,0);
 	vec2 bVal = vec2(blurDir.x/resolution.x,
-					 blurDir.y/resolution.y) * 1.0;
+					 blurDir.y/resolution.y) * 3.0;
 
 	vec4 sum = vec4(0.0);
 

@@ -10,6 +10,23 @@
 
 #include <featherkit/render2d.hpp>
 
+#include "badguy.hpp"
+#include "swordfish.hpp"
+
+struct ProjectileInfo
+{
+	glm::vec2 position;
+	glm::vec2 velocity;
+	fea::Color color;
+	float distanceToDeath;
+
+	ProjectileInfo(const glm::vec2& start,
+				   const glm::vec2& velocity,
+				   const fea::Color& c)
+		: position(start), velocity(velocity), color(c),
+		  distanceToDeath(10000.f) {}
+};
+
 class BlastGame : public fea::Application
 {
 public:
@@ -30,11 +47,19 @@ private:
 	fea::Quad framebufferQuad;
 
 	fea::Quad quad;
+	fea::Quad projectile;
 	fea::Texture beam;
 	fea::Texture circle;
 
+	BadGuy bg;
+	Swordfish sf;
+
+	std::vector<ProjectileInfo> projectiles;
+
 	void drawBeamY(const float X);
 	void drawBeamX(const float Y);
+
+	void drawProjectile(const ProjectileInfo& pi);
 };
 
 #endif // BLASTGAME_HPP

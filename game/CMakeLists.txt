@@ -3,6 +3,8 @@ add_executable(blast
 	source/blastgame.cpp
 	source/blastshaders.cpp
 	source/feapolygon.cpp
+	source/ship.cpp
+	source/swordfish.cpp
 	source/badguy.cpp
 )
 include_directories(
