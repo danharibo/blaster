@@ -112,7 +112,7 @@ void Swordfish::fire()
 	glm::quat q({0.f, 0.f, -getRotation()});
 	auto tmp = q * glm::vec3{16.f * (_fireSwitch ? 1.f : -1.f), 5.0f, 0.f};
 	_fireSwitch = !_fireSwitch;
-	_gunTimer = 0.1f;
+	_gunTimer = 0.05f;
 	_fireCallback(
 				getPosition() + glm::vec2{tmp.x, tmp.y},
 				getForwardVector() * 100.f

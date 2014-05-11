@@ -121,6 +121,7 @@ glm::vec2 dir(1.f, 0.f);
 
 void BlastGame::loop()
 {
+	float dt = 0.016f;
 	fea::Event eve;
 
 	while(input.pollEvent(eve)) {
@@ -154,19 +155,6 @@ void BlastGame::loop()
 		}
 	}
 
-	fea::RenderTarget screenTarget;
-	screenTarget.create(window.getSize().x, window.getSize().y);
-
-	renderer.clear(screenTarget, fea::Color(0.f, 0.f, 0.f));
-
-	//renderer.setBlendMode(fea::ALPHA);
-
-	float dt = 0.016f;
-
-	drawBeamY(150.f);
-	drawBeamY(350.f);
-	drawBeamX(125.f);
-
 	for(auto it = ships.begin();
 		it != ships.end();)
 	{
@@ -177,9 +165,36 @@ void BlastGame::loop()
 		}
 
 		(*it)->tick(dt);
-		(*it)->draw(renderer);
-
 		it++;
+	}
+
+	float moveBox = 0.5f;
+
+	auto lookDir = sf->getForwardVector();
+	auto moveDir = sf->getVelocity();
+	if(std::abs(moveDir.x) > (window.getSize().x/2.f)*moveBox) {
+		moveDir.x = (std::signbit(moveDir.x)?-1.f:1.f) * (window.getSize().x/2.f)*moveBox;
+	}
+	if(std::abs(moveDir.y) > (window.getSize().y/2.f)*moveBox) {
+		moveDir.y = (std::signbit(moveDir.y)?-1.f:1.f) * (window.getSize().y/2.f)*moveBox;
+	}
+	auto lookBase = sf->getPosition();
+	auto lookTarget = lookBase + moveDir;
+	renderer.getViewport().getCamera().setPosition(lookTarget);
+
+	fea::RenderTarget screenTarget;
+	screenTarget.create(window.getSize().x, window.getSize().y);
+
+	renderer.clear(screenTarget, fea::Color(0.f, 0.f, 0.f));
+
+	drawBeamY(150.f);
+	drawBeamY(350.f);
+	drawBeamX(125.f);
+
+	for(auto it = ships.begin();
+		it != ships.end(); ++it)
+	{
+		(*it)->draw(renderer);
 	}
 
 	for(auto it = projectiles.begin();
@@ -208,6 +223,8 @@ void BlastGame::loop()
 
 	renderer.clear(screenTarget);
 	renderer.render(screenTarget);
+
+	renderer.getViewport().getCamera().setPosition(glm::vec2{window.getSize().x, window.getSize().y}/2.f);
 
 	framebufferQuad.setTexture(screenTarget.getTexture());
 	framebufferQuad.setSize({window.getSize().x, window.getSize().y});
