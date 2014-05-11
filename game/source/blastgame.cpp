@@ -1,3 +1,4 @@
+#include "badguy.hpp"
 #include "blastgame.hpp"
 #include "blastshaders.hpp"
 
@@ -15,10 +16,7 @@ u_int8_t tex_beamData8[] = {
 };
 
 u_int8_t tex_beamData4[] = {
-	0x55, 0x55, 0x55, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF,
-	0x55, 0x55, 0x55, 0xFF,
 };
 
 u_int8_t tex_circle[] = {
@@ -43,20 +41,26 @@ u_int8_t tex_circle[] = {
 	0x00, 0x00, 0x00, 0x00,
 };
 
-float gausian_matrix[] = {
-	1.f, 4.f, 6.f, 4.f, 1.f,
-	4.f,16.f,24.f,16.f, 4.f,
-	6.f,24.f,36.f,24.f, 6.f,
-	4.f,16.f,24.f,16.f, 4.f,
-	1.f, 4.f, 6.f, 4.f, 1.f
+float gaussian_matrix[] = {
+	1.f,
+	6.f,
+	15.f,
+	20.f,
+	15.f,
+	6.f,
+	1.f
 };
-// 96
-float gausian_matrix_norm[] = {
-	0.0625f,
-	0.25f,
-	0.375f,
-	0.25f,
-	0.0625f,
+
+float gaussian_matrix_norm[] = {
+	0.00390625,
+	0.03125,
+	0.109375,
+	0.21875,
+	0.2734375,
+	0.21875,
+	0.109375,
+	0.03125,
+	0.00390625
 };
 
 BlastGame::BlastGame() : window(new fea::SDL2WindowBackend()),
@@ -70,7 +74,7 @@ void BlastGame::setup(const std::vector<std::string> &args)
 {
 	window.create(fea::VideoMode(800,600, 32), "Blaster");
 	renderer.setup();
-	beam.create(4, 1, tex_beamData4);
+	beam.create(1, 1, tex_beamData4);
 	circle.create(4, 4, tex_circle);
 
 	quad.setTexture(beam);
@@ -80,7 +84,7 @@ void BlastGame::setup(const std::vector<std::string> &args)
 				Shaders::Framebuffer::FragmentSource);
 	framebufferShader.compile();
 	framebufferShader.activate();
-	framebufferShader.setUniform("gaussianValues", fea::FLOAT, 5, gausian_matrix_norm);
+	framebufferShader.setUniform("gaussianValues", fea::FLOAT, 9, gaussian_matrix_norm);
 
 	brightnessShader.setSource(
 				Shaders::Framebuffer::VertexSource,
@@ -108,20 +112,20 @@ void BlastGame::loop()
 
 	renderer.clear(screenTarget, fea::Color(0.f, 0.f, 0.f));
 
-	renderer.setBlendMode(fea::ALPHA);
+	//renderer.setBlendMode(fea::ALPHA);
 
 	drawBeamY(150.f);
 	drawBeamY(350.f);
 	drawBeamX(125.f);
 
-	fea::Quad q{{50.f, 50.f}};
-	q.setPosition({300.f, 300.f});
-	q.setTexture(circle);
-	renderer.queue(q);
+	BadGuy bg;
+	bg.setPosition({600.f, 400.f});
+	bg.setRotation((3.1415f*1.5f));
+	bg.draw(renderer);
 
+	renderer.clear(screenTarget);
 	renderer.render(screenTarget);
 
-	renderer.setBlendMode(fea::ALPHA);
 	framebufferQuad.setTexture(screenTarget.getTexture());
 	framebufferQuad.setSize({window.getSize().x, window.getSize().y});
 	renderer.queue(framebufferQuad);
@@ -132,6 +136,9 @@ void BlastGame::loop()
 	fea::RenderTarget ppTarget2;
 	ppTarget2.create(screenTarget.getSize().x, screenTarget.getSize().y);
 
+	renderer.setBlendMode(fea::NONE);
+
+	renderer.clear(ppTarget);
 	renderer.render(ppTarget, brightnessShader);
 
 	dir.x = 1.f; dir.y = 0.f;
@@ -139,11 +146,14 @@ void BlastGame::loop()
 	framebufferShader.setUniform("blurDir", fea::VEC2, &dir);
 	framebufferQuad.setTexture(ppTarget.getTexture());
 	renderer.queue(framebufferQuad);
+	renderer.clear(ppTarget2);
 	renderer.render(ppTarget2, framebufferShader);
 
 	dir.x = 0.f; dir.y = 1.f;
 	framebufferShader.activate();
 	framebufferShader.setUniform("blurDir", fea::VEC2, &dir);
+	auto t = screenTarget.getTexture().getId();
+	framebufferShader.setUniform("sceneTexture", fea::TEXTURE, 1, &t);
 	framebufferQuad.setTexture(ppTarget2.getTexture());
 	renderer.queue(framebufferQuad);
 
@@ -162,7 +172,7 @@ void BlastGame::drawBeamY(const float X)
 {
 	quad.setRotation(0.f);
 	quad.setPosition({X, 0.f});
-	quad.setSize({10.f, window.getSize().y});
+	quad.setSize({2.f, window.getSize().y});
 	renderer.queue(quad);
 }
 
@@ -170,6 +180,6 @@ void BlastGame::drawBeamX(const float Y)
 {
 	quad.setRotation((3.1415f/2.f));
 	quad.setPosition({0.f, Y});
-	quad.setSize({10.f, window.getSize().x});
+	quad.setSize({2.f, window.getSize().x});
 	renderer.queue(quad);
 }

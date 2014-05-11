@@ -78,17 +78,16 @@ void main()
 	std::string Framebuffer::FragmentSource = R"(
 #version 130
 uniform sampler2D texture;
+uniform sampler2D sceneTexture;
 uniform vec4 constraints;
 uniform vec3 color;
 uniform float opacity;
 uniform vec2 textureScroll; //hmmmm
 uniform vec2 blurDir;
-uniform float gaussianValues[5];
+uniform float gaussianValues[9];
 
 varying vec2 vTex;
 varying vec4 vColor;
-
-
 
 float boundBetween(float val, float lowerBound, float upperBound)
 {
@@ -111,16 +110,20 @@ float boundBetween(float val, float lowerBound, float upperBound)
 vec4 sampleGaussian(vec2 tc)
 {
 	ivec2 resolution = textureSize(texture,0);
-	vec2 bVal = vec2(0.00125 * blurDir.x,
-					 0.0016666667 * blurDir.y) * 1.0;
+	vec2 bVal = vec2(blurDir.x/resolution.x,
+					 blurDir.y/resolution.y) * 1.0;
 
 	vec4 sum = vec4(0.0);
 
-	sum += texture2D(texture, tc - (2.0 * bVal)) * gaussianValues[0];
-	sum += texture2D(texture, tc - (1.0 * bVal)) * gaussianValues[1];
-	sum += texture2D(texture, tc) * gaussianValues[2];
-	sum += texture2D(texture, tc + (1.0 * bVal)) * gaussianValues[3];
-	sum += texture2D(texture, tc + (2.0 * bVal)) * gaussianValues[4];
+	sum += texture2D(texture, tc - (4.0 * bVal)) * gaussianValues[0];
+	sum += texture2D(texture, tc - (3.0 * bVal)) * gaussianValues[1];
+	sum += texture2D(texture, tc - (2.0 * bVal)) * gaussianValues[2];
+	sum += texture2D(texture, tc - (1.0 * bVal)) * gaussianValues[3];
+	sum += texture2D(texture, tc) * gaussianValues[4];
+	sum += texture2D(texture, tc + (1.0 * bVal)) * gaussianValues[5];
+	sum += texture2D(texture, tc + (2.0 * bVal)) * gaussianValues[6];
+	sum += texture2D(texture, tc + (3.0 * bVal)) * gaussianValues[7];
+	sum += texture2D(texture, tc + (4.0 * bVal)) * gaussianValues[8];
 
 	return sum;
 }
@@ -130,7 +133,7 @@ void main()
 	vec2 constraintSize = abs(vec2(constraints[1] - constraints[0] , constraints[3] - constraints[2]));
 	vec2 texCoords = constraintSize * vTex.st + vec2(constraints[0], constraints[2]) - textureScroll;
 	texCoords = vec2(boundBetween(texCoords.s, constraints[0], constraints[1]), boundBetween(texCoords.t, constraints[2], constraints[3]));
-	gl_FragColor = sampleGaussian(texCoords) * vec4(color, opacity) * vec4(vColor.rgb, 1.0);
+	gl_FragColor = texture2D(sceneTexture, texCoords) + sampleGaussian(texCoords);
 })";
 #endif
 
