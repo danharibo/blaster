@@ -14,7 +14,9 @@ void Ship::calculateBoundingRadius()
 Ship::Ship()
 	: _angularVelocity(0.f),
 	  _boundingRadius(0.f),
-	  _hp(10.f)
+	  _hp(10.f),
+	  _enabledThrusters(0),
+	  _gunTimer(0.f)
 {
 }
 
@@ -52,6 +54,27 @@ void Ship::setAngularVeocity(float av)
 	_angularVelocity = av;
 }
 
+void Ship::enableThruster(Ship::Thruster t)
+{
+	_enabledThrusters |= t;
+}
+
+void Ship::disableThruster(Ship::Thruster t)
+{
+	_enabledThrusters &= ~t;
+}
+
+void Ship::setThruster(Ship::Thruster t, bool enabled)
+{
+	if(enabled) enableThruster(t);
+	else disableThruster(t);
+}
+
+bool Ship::isThrusterEnabled(Ship::Thruster t)
+{
+	return (_enabledThrusters & t) == t;
+}
+
 void Ship::draw(fea::Renderer2D &renderer)
 {
 	renderer.queue(polygon);
@@ -59,6 +82,33 @@ void Ship::draw(fea::Renderer2D &renderer)
 
 void Ship::tick(float dt)
 {
+	if(isThrusterEnabled(T_YAWL)) {
+		setAngularVeocity(getAngularVelocity() + 0.05f);
+	}
+	if(isThrusterEnabled(T_YAWR)) {
+		setAngularVeocity(getAngularVelocity() - 0.05f);
+	}
+	if(isThrusterEnabled(T_MAIN)) {
+		setVelocity(getVelocity() +
+					   getForwardVector() * 1.0f);
+	}
+	if(isThrusterEnabled(T_REVERSE)) {
+		setVelocity(getVelocity() -
+					   getForwardVector() * 1.0f);
+	}
+	if(isThrusterEnabled(T_MOVER)) {
+		setVelocity(getVelocity() +
+					   getRightVector() * 0.5f);
+	}
+	if(isThrusterEnabled(T_MOVEL)) {
+		setVelocity(getVelocity() -
+					   getRightVector() * 0.5f);
+	}
+	_gunTimer -= dt;
+	if(isThrusterEnabled(T_WEAPON) && _gunTimer <= 0.f) {
+		fire();
+	}
+
 	auto p = polygon.getPosition();
 	setPosition(p + (_velocity * dt));
 	auto a = polygon.getRotation();

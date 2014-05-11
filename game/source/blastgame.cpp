@@ -127,31 +127,29 @@ void BlastGame::loop()
 		if (eve.type == fea::Event::CLOSED) {
 			quit();
 		}
-		if(eve.type == fea::Event::KEYPRESSED) {
+		bool pressed = eve.type == fea::Event::KEYPRESSED;
+		if(eve.type == fea::Event::KEYRELEASED
+				|| pressed) {
 			if(eve.key.code == fea::Keyboard::Q) {
-				sf->setAngularVeocity(sf->getAngularVelocity() + 0.05f);
+				sf->setThruster(Ship::T_YAWL, pressed);
 			}
 			if(eve.key.code == fea::Keyboard::E) {
-				sf->setAngularVeocity(sf->getAngularVelocity() - 0.05f);
+				sf->setThruster(Ship::T_YAWR, pressed);
 			}
 			if(eve.key.code == fea::Keyboard::W) {
-				sf->setVelocity(sf->getVelocity() +
-							   sf->getForwardVector() * 1.0f);
+				sf->setThruster(Ship::T_MAIN, pressed);
 			}
 			if(eve.key.code == fea::Keyboard::S) {
-				sf->setVelocity(sf->getVelocity() -
-							   sf->getForwardVector() * 1.0f);
+				sf->setThruster(Ship::T_REVERSE, pressed);
 			}
 			if(eve.key.code == fea::Keyboard::D) {
-				sf->setVelocity(sf->getVelocity() +
-							   sf->getRightVector() * 0.5f);
+				sf->setThruster(Ship::T_MOVER, pressed);
 			}
 			if(eve.key.code == fea::Keyboard::A) {
-				sf->setVelocity(sf->getVelocity() -
-							   sf->getRightVector() * 0.5f);
+				sf->setThruster(Ship::T_MOVEL, pressed);
 			}
 			if(eve.key.code == fea::Keyboard::SPACE) {
-				sf->fire();
+				sf->setThruster(Ship::T_WEAPON, pressed);
 			}
 		}
 	}
