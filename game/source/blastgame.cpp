@@ -90,23 +90,27 @@ void BlastGame::setup(const std::vector<std::string> &args)
 	framebufferQuad.setPosition({0.f, 0.f});
 	framebufferQuad.setVFlip(true);
 
-	bg.setPosition({600.f, 400.f});
-	bg.setRotation((3.1415f*1.5f));
-	bg.setVelocity({-36.f, 0.f});
+	auto badguy = new BadGuy;
 
-	ships.push_back(&bg);
+	badguy->setPosition({600.f, 400.f});
+	badguy->setRotation((3.1415f*1.5f));
+	badguy->setVelocity({-36.f, 0.f});
 
-	sf.setPosition({200.f, 400.f});
-	sf.setRotation((3.1415f*0.5f));
-	sf.setVelocity({2.f, 0.f});
+	ships.push_back(badguy);
 
-	ships.push_back(&sf);
+	sf = new Swordfish;
 
-	sf.setFireCallback([&](const glm::vec2& p, const glm::vec2& v) {
+	sf->setPosition({200.f, 400.f});
+	sf->setRotation((3.1415f*0.5f));
+	sf->setVelocity({2.f, 0.f});
+
+	ships.push_back(sf);
+
+	sf->setFireCallback([&](const glm::vec2& p, const glm::vec2& v) {
 				projectiles.push_back(ProjectileInfo{
 										  p,
 										  v, fea::Color(0, 0, 255),
-										  &sf
+										  sf
 									  });
 	});
 
@@ -125,29 +129,29 @@ void BlastGame::loop()
 		}
 		if(eve.type == fea::Event::KEYPRESSED) {
 			if(eve.key.code == fea::Keyboard::Q) {
-				sf.setAngularVeocity(sf.getAngularVelocity() + 0.05f);
+				sf->setAngularVeocity(sf->getAngularVelocity() + 0.05f);
 			}
 			if(eve.key.code == fea::Keyboard::E) {
-				sf.setAngularVeocity(sf.getAngularVelocity() - 0.05f);
+				sf->setAngularVeocity(sf->getAngularVelocity() - 0.05f);
 			}
 			if(eve.key.code == fea::Keyboard::W) {
-				sf.setVelocity(sf.getVelocity() +
-							   sf.getForwardVector() * 1.0f);
+				sf->setVelocity(sf->getVelocity() +
+							   sf->getForwardVector() * 1.0f);
 			}
 			if(eve.key.code == fea::Keyboard::S) {
-				sf.setVelocity(sf.getVelocity() -
-							   sf.getForwardVector() * 1.0f);
+				sf->setVelocity(sf->getVelocity() -
+							   sf->getForwardVector() * 1.0f);
 			}
 			if(eve.key.code == fea::Keyboard::D) {
-				sf.setVelocity(sf.getVelocity() +
-							   sf.getRightVector() * 0.5f);
+				sf->setVelocity(sf->getVelocity() +
+							   sf->getRightVector() * 0.5f);
 			}
 			if(eve.key.code == fea::Keyboard::A) {
-				sf.setVelocity(sf.getVelocity() -
-							   sf.getRightVector() * 0.5f);
+				sf->setVelocity(sf->getVelocity() -
+							   sf->getRightVector() * 0.5f);
 			}
 			if(eve.key.code == fea::Keyboard::SPACE) {
-				sf.fire();
+				sf->fire();
 			}
 		}
 	}
@@ -165,11 +169,20 @@ void BlastGame::loop()
 	drawBeamY(350.f);
 	drawBeamX(125.f);
 
-	bg.tick(dt);
-	bg.draw(renderer);
+	for(auto it = ships.begin();
+		it != ships.end();)
+	{
+		if((*it)->getHP() <= 0.f) {
+			delete *it;
+			it = ships.erase(it);
+			continue;
+		}
 
-	sf.tick(dt);
-	sf.draw(renderer);
+		(*it)->tick(dt);
+		(*it)->draw(renderer);
+
+		it++;
+	}
 
 	for(auto it = projectiles.begin();
 		it != projectiles.end();)
@@ -187,6 +200,7 @@ void BlastGame::loop()
 							   [&](Ship* s) { return s != it->owner && glm::length(it->position - s->getPosition()) < s->getBoundingRadius(); });
 		if( ship != ships.end() ) {
 			it = projectiles.erase(it);
+			(*ship)->damage(10.f);
 			continue;
 		}
 
@@ -236,7 +250,12 @@ void BlastGame::loop()
 
 void BlastGame::destroy()
 {
-
+	for(auto it = ships.begin();
+		it != ships.end();)
+	{
+		delete *it;
+		it = ships.erase(it);
+	}
 }
 
 void BlastGame::drawBeamY(const float X)

@@ -18,9 +18,12 @@ protected:
 
 	float _boundingRadius;
 
+	float _hp;
+
 	void calculateBoundingRadius();
 public:
 	Ship();
+	virtual ~Ship() {}
 
 	void setPosition(const glm::vec2& p);
 	glm::vec2 getPosition() const { return polygon.getPosition(); }
@@ -39,6 +42,9 @@ public:
 
 	void setFireCallback(const WeaponCallback& cb) { _fireCallback = cb; }
 	virtual void fire() = 0;
+
+	float getHP() const { return _hp; }
+	void damage(float d) { _hp -= d; }
 
 	void draw(fea::Renderer2D& renderer);
 

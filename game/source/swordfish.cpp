@@ -103,6 +103,8 @@ Swordfish::Swordfish()
 	polygon.setTexCoords(tc);
 
 	calculateBoundingRadius();
+
+	_hp = 100.f;
 }
 
 void Swordfish::fire()

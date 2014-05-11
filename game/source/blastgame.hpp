@@ -54,8 +54,7 @@ private:
 	fea::Texture beam;
 	fea::Texture circle;
 
-	BadGuy bg;
-	Swordfish sf;
+	Swordfish* sf;
 
 	std::vector<Ship*> ships;
 

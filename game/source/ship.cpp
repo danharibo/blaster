@@ -13,7 +13,8 @@ void Ship::calculateBoundingRadius()
 
 Ship::Ship()
 	: _angularVelocity(0.f),
-	  _boundingRadius(0.f)
+	  _boundingRadius(0.f),
+	  _hp(10.f)
 {
 }
 
