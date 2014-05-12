@@ -255,7 +255,7 @@ void BlastGame::loop()
 
 			float radarRadius = std::min(window.getSize().x, window.getSize().y) * 0.25f;
 			auto dp = (*it)->getPosition() - sf->getPosition();
-			if(glm::length(dp) > radarRadius) {
+			if(glm::length(dp) > radarRadius*2.f) {
 				auto dir = glm::normalize(dp);
 				radarQuad.setRotation(atan2(dir.x, dir.y));
 				radarQuad.setPosition(lookTarget + dir * radarRadius);

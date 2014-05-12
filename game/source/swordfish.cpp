@@ -115,6 +115,6 @@ void Swordfish::fire()
 	_gunTimer = 0.05f;
 	_fireCallback(
 				getPosition() + glm::vec2{tmp.x, tmp.y},
-				getForwardVector() * 250.f + getVelocity()
+				getForwardVector() * 500.f + getVelocity()
 				);
 }
