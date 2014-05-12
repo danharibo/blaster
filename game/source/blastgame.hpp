@@ -61,6 +61,7 @@ private:
 	fea::Quad quad;
 	fea::Quad projectile;
 	fea::Texture beam;
+	fea::Texture radarTriangle;
 
 	Swordfish* sf;
 

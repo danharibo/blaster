@@ -7,6 +7,30 @@ u_int8_t tex_beamData4[] = {
 	0xFF, 0xFF, 0xFF, 0xFF,
 };
 
+// #####
+// _###_
+// __#__
+u_int8_t tex_radarTriangle[] {
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0xFF, 0xFF, 0xFF, 0xFF,
+
+	0x00, 0x00, 0x00, 0x00,
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0x00, 0x00, 0x00, 0x00,
+
+	0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00,
+	0xFF, 0xFF, 0xFF, 0xFF,
+	0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00,
+
+};
+
 #define HALFPI (3.1415f/2.f)
 #define QUTRPI (3.1415f/4.f)
 
@@ -40,6 +64,15 @@ std::vector<BackgroundBeam> bgBeams = {
 	{{-2000.f,-5000.f}, QUTRPI, 0.65f},
 	{{-1500.f,-5000.f}, QUTRPI, 0.65f},
 	{{-1000.f,-5000.f}, QUTRPI, 0.65f},
+
+	{{-5000.f,-4500.f}, QUTRPI, 0.65f},
+	{{-5000.f,-4000.f}, QUTRPI, 0.65f},
+	{{-5000.f,-3500.f}, QUTRPI, 0.65f},
+	{{-5000.f,-3000.f}, QUTRPI, 0.65f},
+	{{-5000.f,-2500.f}, QUTRPI, 0.65f},
+	{{-5000.f,-2000.f}, QUTRPI, 0.65f},
+	{{-5000.f,-1500.f}, QUTRPI, 0.65f},
+	{{-5000.f,-1000.f}, QUTRPI, 0.65f},
 };
 
 #define GAUSS_BLUR_DIAM (13)
@@ -57,6 +90,7 @@ void BlastGame::setup(const std::vector<std::string> &args)
 	window.create(fea::VideoMode(800,600, 32), "Blaster");
 	renderer.setup();
 	beam.create(1, 1, tex_beamData4);
+	radarTriangle.create(5,3, tex_radarTriangle);
 
 	quad.setTexture(beam);
 
@@ -169,10 +203,22 @@ void BlastGame::loop()
 		it++;
 	}
 
+	// Make sure there's always someone to shoot.
+	if(ships.size() < 2) {
+		auto badguy = new BadGuy;
+
+		badguy->setPosition({600.f, 400.f});
+		badguy->setRotation((3.1415f*1.5f));
+		badguy->setVelocity({-36.f, 0.f});
+
+		ships.push_back(badguy);
+	}
+
 	float moveBox = 0.5f;
 
+	auto velocity = glm::length(sf->getVelocity());
 	auto lookDir = sf->getForwardVector();
-	auto moveDir = sf->getVelocity();
+	auto moveDir = lookDir * velocity;
 	if(std::abs(moveDir.x) > (window.getSize().x/2.f)*moveBox) {
 		moveDir.x = (std::signbit(moveDir.x)?-1.f:1.f) * (window.getSize().x/2.f)*moveBox;
 	}
@@ -190,10 +236,33 @@ void BlastGame::loop()
 
 	for(auto& b : bgBeams) drawBeam(b);
 
+	fea::Quad healthQuad;
+	healthQuad.setColor({255, 0, 0});
+	fea::Quad radarQuad;
+	radarQuad.setTexture(radarTriangle);
+	radarQuad.setScale({5.f, 5.f});
+
 	for(auto it = ships.begin();
 		it != ships.end(); ++it)
 	{
 		(*it)->draw(renderer);
+
+		if((*it) != sf) {
+			float healthWidth = (*it)->getBoundingRadius()*2.f;
+			healthQuad.setSize({((*it)->getHP()/50.f) * healthWidth, 5.f});
+			healthQuad.setPosition((*it)->getPosition() + glm::vec2{-healthQuad.getSize().x/2.f, 20.f});
+			renderer.queue(healthQuad);
+
+			float radarRadius = std::min(window.getSize().x, window.getSize().y) * 0.25f;
+			auto dp = (*it)->getPosition() - sf->getPosition();
+			if(glm::length(dp) > radarRadius) {
+				auto dir = glm::normalize(dp);
+				radarQuad.setRotation(atan2(dir.x, dir.y));
+				radarQuad.setPosition(lookTarget + dir * radarRadius);
+				radarQuad.setColor({255, 0, 0});
+				renderer.queue(radarQuad);
+			}
+		}
 	}
 
 	for(auto it = projectiles.begin();
@@ -227,9 +296,9 @@ void BlastGame::loop()
 	renderer.getViewport().getCamera().setPosition(glm::vec2{window.getSize().x, window.getSize().y}/2.f);
 
 	float healthWidth = window.getSize().x - 40;
-	fea::Quad healthQuad{{(sf->getHP()/100.f) * healthWidth, 10.f}};
+	healthQuad.setSize({(sf->getHP()/100.f) * healthWidth, 10.f});
 	healthQuad.setPosition({20.f, window.getSize().y-30.f});
-	healthQuad.setColor({255, 0, 0});
+	healthQuad.setColor({0, 255, 0});
 	renderer.queue(healthQuad);
 
 	fea::TextSurface text;

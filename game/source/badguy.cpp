@@ -51,6 +51,8 @@ BadGuy::BadGuy()
 		tc.push_back(0.f);
 	polygon.setTexCoords(tc);
 	calculateBoundingRadius();
+
+	_hp = 50.f;
 }
 
 void BadGuy::fire()
