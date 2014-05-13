@@ -13,6 +13,7 @@
 
 #include "badguy.hpp"
 #include "swordfish.hpp"
+#include "explosion.hpp"
 
 struct ProjectileInfo
 {
@@ -66,6 +67,8 @@ private:
 	Swordfish* sf;
 
 	std::vector<Ship*> ships;
+
+	std::vector<Explosion*> explosions;
 
 	std::vector<ProjectileInfo> projectiles;
 

@@ -194,6 +194,11 @@ void BlastGame::loop()
 		it != ships.end();)
 	{
 		if((*it)->getHP() <= 0.f) {
+			auto e = new Explosion(75.f, 1.f);
+			e->setPosition((*it)->getPosition());
+
+			explosions.push_back(e);
+
 			delete *it;
 			it = ships.erase(it);
 			continue;
@@ -201,6 +206,20 @@ void BlastGame::loop()
 
 		(*it)->tick(dt);
 		it++;
+	}
+
+	for(auto it = explosions.begin();
+		it != explosions.end();)
+	{
+		(*it)->tick(dt, ships);
+
+		if((*it)->isOver()) {
+			delete *it;
+			it = explosions.erase(it);
+		}
+		else {
+			it++;
+		}
 	}
 
 	// Make sure there's always someone to shoot.
@@ -231,6 +250,8 @@ void BlastGame::loop()
 
 	fea::RenderTarget screenTarget;
 	screenTarget.create(window.getSize().x, window.getSize().y);
+
+	renderer.setBlendMode(fea::ALPHA);
 
 	renderer.clear(screenTarget, fea::Color(0.f, 0.f, 0.f));
 
@@ -264,6 +285,8 @@ void BlastGame::loop()
 			}
 		}
 	}
+
+	for(auto e : explosions) e->draw(renderer);
 
 	for(auto it = projectiles.begin();
 		it != projectiles.end();)

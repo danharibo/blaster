@@ -6,6 +6,7 @@ add_executable(blast
 	source/ship.cpp
 	source/swordfish.cpp
 	source/badguy.cpp
+	source/explosion.cpp
 )
 include_directories(
 	#/usr/local/include/cegui-0/
